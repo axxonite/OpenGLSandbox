@@ -6,6 +6,7 @@
 #include <iostream>
 #include "data.h"
 #include "shader.h"
+#include "camera.h"
 
 GLFWwindow* window;
 unsigned int VBO;
@@ -14,9 +15,44 @@ unsigned int EBO;
 unsigned int texture1;
 unsigned int texture2;
 
+const unsigned int SCR_WIDTH = 800;
+const unsigned int SCR_HEIGHT = 600;
+
+Camera camera(glm::vec3(0.0f, 0.0f, 3.0f));
+float lastX = SCR_WIDTH / 2.0f;
+float lastY = SCR_HEIGHT / 2.0f;
+bool firstMouse = true;
+
+// timing
+float deltaTime = 0.0f;	// time between current frame and last frame
+float lastFrame = 0.0f;
+
 void windowResized(GLFWwindow* window, int width, int height)
 {
 	glViewport(0, 0, width, height);
+}
+
+void mouse_callback(GLFWwindow* window, double xpos, double ypos)
+{
+	if (firstMouse)
+	{
+		lastX = (float)xpos;
+		lastY = (float)ypos;
+		firstMouse = false;
+	}
+
+	float xoffset = (float)xpos - lastX;
+	float yoffset = lastY - (float)ypos; // reversed since y-coordinates go from bottom to top
+
+	lastX = (float)xpos;
+	lastY = (float)ypos;
+
+	camera.ProcessMouseMovement(xoffset, yoffset);
+}
+
+void scroll_callback(GLFWwindow* window, double xoffset, double yoffset)
+{
+	camera.ProcessMouseScroll((float)yoffset);
 }
 
 bool initializeWindow() {
@@ -42,6 +78,9 @@ bool initializeWindow() {
 
 	glViewport(0, 0, 800, 600);
 	glfwSetFramebufferSizeCallback(window, windowResized);
+	glfwSetInputMode(window, GLFW_CURSOR, GLFW_CURSOR_DISABLED);
+	glfwSetCursorPosCallback(window, mouse_callback);
+	glfwSetScrollCallback(window, scroll_callback);
 	return true;
 }
 
@@ -68,6 +107,15 @@ void processInput(GLFWwindow* window)
 {
 	if (glfwGetKey(window, GLFW_KEY_ESCAPE) == GLFW_PRESS)
 		glfwSetWindowShouldClose(window, true);
+
+	if (glfwGetKey(window, GLFW_KEY_W) == GLFW_PRESS)
+		camera.ProcessKeyboard(CameraMovement::FORWARD, deltaTime);
+	if (glfwGetKey(window, GLFW_KEY_S) == GLFW_PRESS)
+		camera.ProcessKeyboard(CameraMovement::BACKWARD, deltaTime);
+	if (glfwGetKey(window, GLFW_KEY_A) == GLFW_PRESS)
+		camera.ProcessKeyboard(CameraMovement::LEFT, deltaTime);
+	if (glfwGetKey(window, GLFW_KEY_D) == GLFW_PRESS)
+		camera.ProcessKeyboard(CameraMovement::RIGHT, deltaTime);
 }
 
 unsigned int loadTexture(const char* filename) {
@@ -108,6 +156,9 @@ int main()
 
 	while (!glfwWindowShouldClose(window))
 	{
+		float currentFrame = (float)glfwGetTime();
+		deltaTime = currentFrame - lastFrame;
+		lastFrame = currentFrame;
 		processInput(window);
 
 		glClearColor(0.2f, 0.3f, 0.3f, 1.0f);
@@ -122,14 +173,12 @@ int main()
 		ourShader.setInt("texture1", 0);
 		ourShader.setInt("texture2", 1);
 
-		glm::mat4 view = glm::mat4(1.0f);
-		// note that we're translating the scene in the reverse direction of where we want to move
-		view = glm::translate(view, glm::vec3(0.0f, 0.0f, -3.0f));
-		ourShader.setMatrix44("view", view);
-
-		glm::mat4 projection;
-		projection = glm::perspective(glm::radians(45.0f), 800.0f / 600.0f, 0.1f, 100.0f);
+		glm::mat4 projection = glm::perspective(glm::radians(camera.GetZoom()), (float)SCR_WIDTH / (float)SCR_HEIGHT, 0.1f, 100.0f);
 		ourShader.setMatrix44("projection", projection);
+
+		// camera/view transformation
+		glm::mat4 view = camera.GetViewMatrix();
+		ourShader.setMatrix44("view", view);
 
 		// glPolygonMode(GL_FRONT_AND_BACK, GL_LINE);
 
@@ -145,7 +194,7 @@ int main()
 			model = glm::translate(model, cubePositions[i]);
 			float angle = 20.0f * i;
 			model = glm::rotate(model, glm::radians(angle), glm::vec3(1.0f, 0.3f, 0.5f));
-			model = glm::rotate(model, (float)glfwGetTime() * glm::radians(50.0f), glm::vec3(0.5f, 1.0f, 0.0f));
+			model = glm::rotate(model, (float)glfwGetTime() * glm::radians(500.0f), glm::vec3(0.5f, 1.0f, 0.0f));
 			ourShader.setMatrix44("model", model);
 
 			glDrawArrays(GL_TRIANGLES, 0, 36);
