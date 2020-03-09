@@ -3,6 +3,7 @@
 #include <sstream>
 #include <iostream>
 #include <glad/glad.h> // include glad to get all the required OpenGL headers
+#include <glm/gtc/type_ptr.hpp>
 
 int Shader::createShader(const char* source, unsigned int shaderType, const char* errorType) {
 	unsigned int shader;
@@ -89,4 +90,9 @@ void Shader::setFloat(const std::string& name, float value) const
 void Shader::setFloat4(const std::string& name, float x, float y, float z, float w) const
 {
 	glUniform4f(glGetUniformLocation(id_, name.c_str()), x, y, z, w);
+}
+
+void Shader::setMatrix44(const std::string& name, const glm::mat4& mat) const
+{
+	glUniformMatrix4fv(glGetUniformLocation(id_, name.c_str()), 1, GL_FALSE, glm::value_ptr(mat));
 }
