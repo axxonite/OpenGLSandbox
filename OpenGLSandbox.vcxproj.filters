@@ -5,13 +5,26 @@
     <ClCompile Include="3rdparty\glad\src\glad.c">
       <Filter>glad</Filter>
     </ClCompile>
+    <ClCompile Include="shader.cpp" />
   </ItemGroup>
   <ItemGroup>
     <Filter Include="glad">
       <UniqueIdentifier>{0fad410b-20db-4056-aa58-2538655d0683}</UniqueIdentifier>
     </Filter>
+    <Filter Include="shaders">
+      <UniqueIdentifier>{ce1f1663-f536-4022-8c6a-2fdabc4a41b2}</UniqueIdentifier>
+    </Filter>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="data.h" />
+    <ClInclude Include="shader.h" />
+  </ItemGroup>
+  <ItemGroup>
+    <None Include="shaders\shader.vs">
+      <Filter>shaders</Filter>
+    </None>
+    <None Include="shaders\shader.fs">
+      <Filter>shaders</Filter>
+    </None>
   </ItemGroup>
 </Project>

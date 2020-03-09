@@ -2,11 +2,11 @@
 #include <glfw3.h>
 #include <iostream>
 #include "data.h"
+#include "shader.h"
 
 GLFWwindow* window;
 unsigned int VBO;
 unsigned int VAO;
-unsigned int shaderProgram;
 unsigned int EBO;
 
 void windowResized(GLFWwindow* window, int width, int height)
@@ -40,44 +40,6 @@ bool initializeWindow() {
 	return true;
 }
 
-void logErrors(bool success, unsigned int object, const char* errorType)
-{
-	char infoLog[512];
-	if (!success) {
-		glGetProgramInfoLog(object, 512, NULL, infoLog);
-		std::cout << errorType << " FAILED\n" << infoLog << std::endl;
-	}
-}
-
-int createShader(const char* source, unsigned int shaderType, const char* errorType) {
-	unsigned int shader;
-	shader = glCreateShader(shaderType);
-	glShaderSource(shader, 1, &source, NULL);
-	glCompileShader(shader);
-
-	int  success;
-	glGetShaderiv(shader, GL_COMPILE_STATUS, &success);
-	logErrors(success, shader, errorType);
-	return shader;
-}
-
-void createProgram() {
-	unsigned int vertexShader = createShader(vertexShaderSource, GL_VERTEX_SHADER, "ERROR::SHADER::VERTEX::COMPILATION");
-	unsigned int fragmentShader = createShader(fragmentShaderSource, GL_FRAGMENT_SHADER, "ERROR::SHADER::FRAGMENT::COMPILATION");
-
-	shaderProgram = glCreateProgram();
-	glAttachShader(shaderProgram, vertexShader);
-	glAttachShader(shaderProgram, fragmentShader);
-	glLinkProgram(shaderProgram);
-
-	int  success;
-	glGetProgramiv(shaderProgram, GL_LINK_STATUS, &success);
-	logErrors(success, shaderProgram, "ERROR::SHADER::PROGRAM::COMPILATION" );
-
-	glDeleteShader(vertexShader);
-	glDeleteShader(fragmentShader);
-}
-
 void createVertexArray() {
 	glGenVertexArrays(1, &VAO);
 	glBindVertexArray(VAO);
@@ -90,8 +52,10 @@ void createVertexArray() {
 	glBindBuffer(GL_ARRAY_BUFFER, VBO);
 	glBufferData(GL_ARRAY_BUFFER, sizeof(vertices), vertices, GL_STATIC_DRAW);
 
-	glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, 3 * sizeof(float), (void*)0);
+	glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, 6 * sizeof(float), (void*)0);
 	glEnableVertexAttribArray(0);
+	glVertexAttribPointer(1, 3, GL_FLOAT, GL_FALSE, 6 * sizeof(float), (void*)(3 * sizeof(float)));
+	glEnableVertexAttribArray(1);
 }
 
 
@@ -107,7 +71,7 @@ int main()
 		return -1;
 
 	createVertexArray();
-	createProgram();
+	Shader ourShader("../../shaders/shader.vs", "../../shaders/shader.fs");
 
 	while (!glfwWindowShouldClose(window))
 	{
@@ -116,9 +80,15 @@ int main()
 		glClearColor(0.2f, 0.3f, 0.3f, 1.0f);
 		glClear(GL_COLOR_BUFFER_BIT);
 
-		glBindVertexArray(VAO);
-		glUseProgram(shaderProgram);
+
+		float timeValue = (float)glfwGetTime();
+		float greenValue = sin(timeValue) / 2.0f + 0.5f;
+		ourShader.use();
+		ourShader.setFloat4("ourColor", 0.0f, greenValue, 0.0f, 1.0f);
+
 		// glPolygonMode(GL_FRONT_AND_BACK, GL_LINE);
+
+		glBindVertexArray(VAO);
 		glDrawElements(GL_TRIANGLES, 6, GL_UNSIGNED_INT, 0);
 		glBindVertexArray(0);
 
