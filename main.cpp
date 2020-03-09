@@ -3,22 +3,16 @@
 #include <iostream>
 #include "data.h"
 
-void windowResized(GLFWwindow* window, int width, int height)
-{
-	glViewport(0, 0, width, height);
-}
-
-void processInput(GLFWwindow* window)
-{
-	if (glfwGetKey(window, GLFW_KEY_ESCAPE) == GLFW_PRESS)
-		glfwSetWindowShouldClose(window, true);
-}
-
 GLFWwindow* window;
 unsigned int VBO;
 unsigned int VAO;
 unsigned int shaderProgram;
 unsigned int EBO;
+
+void windowResized(GLFWwindow* window, int width, int height)
+{
+	glViewport(0, 0, width, height);
+}
 
 bool initializeWindow() {
 	glfwInit();
@@ -46,46 +40,42 @@ bool initializeWindow() {
 	return true;
 }
 
-void createProgram() {
-	unsigned int vertexShader;
-	vertexShader = glCreateShader(GL_VERTEX_SHADER);
-	glShaderSource(vertexShader, 1, &vertexShaderSource, NULL);
-	glCompileShader(vertexShader);
+void logErrors(bool success, unsigned int object, const char* errorType)
+{
+	char infoLog[512];
+	if (!success) {
+		glGetProgramInfoLog(object, 512, NULL, infoLog);
+		std::cout << errorType << " FAILED\n" << infoLog << std::endl;
+	}
+}
+
+int createShader(const char* source, unsigned int shaderType, const char* errorType) {
+	unsigned int shader;
+	shader = glCreateShader(shaderType);
+	glShaderSource(shader, 1, &source, NULL);
+	glCompileShader(shader);
 
 	int  success;
-	char infoLog[512];
-	glGetShaderiv(vertexShader, GL_COMPILE_STATUS, &success);
-	if (!success)
-	{
-		glGetShaderInfoLog(vertexShader, 512, NULL, infoLog);
-		std::cout << "ERROR::SHADER::VERTEX::COMPILATION_FAILED\n" << infoLog << std::endl;
-	}
+	glGetShaderiv(shader, GL_COMPILE_STATUS, &success);
+	logErrors(success, shader, errorType);
+	return shader;
+}
 
-	unsigned int fragmentShader;
-	fragmentShader = glCreateShader(GL_FRAGMENT_SHADER);
-	glShaderSource(fragmentShader, 1, &fragmentShaderSource, NULL);
-	glCompileShader(fragmentShader);
-	glGetShaderiv(fragmentShader, GL_COMPILE_STATUS, &success);
-	if (!success)
-	{
-		glGetShaderInfoLog(fragmentShader, 512, NULL, infoLog);
-		std::cout << "ERROR::SHADER::FRAGMENT::COMPILATION_FAILED\n" << infoLog << std::endl;
-	}
+void createProgram() {
+	unsigned int vertexShader = createShader(vertexShaderSource, GL_VERTEX_SHADER, "ERROR::SHADER::VERTEX::COMPILATION");
+	unsigned int fragmentShader = createShader(fragmentShaderSource, GL_FRAGMENT_SHADER, "ERROR::SHADER::FRAGMENT::COMPILATION");
+
 	shaderProgram = glCreateProgram();
-
 	glAttachShader(shaderProgram, vertexShader);
 	glAttachShader(shaderProgram, fragmentShader);
 	glLinkProgram(shaderProgram);
 
+	int  success;
 	glGetProgramiv(shaderProgram, GL_LINK_STATUS, &success);
-	if (!success) {
-		glGetProgramInfoLog(shaderProgram, 512, NULL, infoLog);
-		std::cout << "ERROR::SHADER::PROGRAM::COMPILATION_FAILED\n" << infoLog << std::endl;
-	}
+	logErrors(success, shaderProgram, "ERROR::SHADER::PROGRAM::COMPILATION" );
 
 	glDeleteShader(vertexShader);
 	glDeleteShader(fragmentShader);
-
 }
 
 void createVertexArray() {
@@ -102,6 +92,13 @@ void createVertexArray() {
 
 	glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, 3 * sizeof(float), (void*)0);
 	glEnableVertexAttribArray(0);
+}
+
+
+void processInput(GLFWwindow* window)
+{
+	if (glfwGetKey(window, GLFW_KEY_ESCAPE) == GLFW_PRESS)
+		glfwSetWindowShouldClose(window, true);
 }
 
 int main()
