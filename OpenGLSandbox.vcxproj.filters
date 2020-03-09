@@ -3,21 +3,33 @@
   <ItemGroup>
     <ClCompile Include="main.cpp" />
     <ClCompile Include="3rdparty\glad\src\glad.c">
-      <Filter>glad</Filter>
+      <Filter>3rdparty\glad</Filter>
     </ClCompile>
     <ClCompile Include="shader.cpp" />
+    <ClCompile Include="3rdparty\stb\stb_image.cpp">
+      <Filter>3rdparty\stb</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
-    <Filter Include="glad">
-      <UniqueIdentifier>{0fad410b-20db-4056-aa58-2538655d0683}</UniqueIdentifier>
-    </Filter>
     <Filter Include="shaders">
       <UniqueIdentifier>{ce1f1663-f536-4022-8c6a-2fdabc4a41b2}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="3rdparty">
+      <UniqueIdentifier>{0252b930-a4e7-4711-952d-33cb518b344a}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="3rdparty\glad">
+      <UniqueIdentifier>{0fad410b-20db-4056-aa58-2538655d0683}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="3rdparty\stb">
+      <UniqueIdentifier>{689190ed-80ab-4706-8d58-5930d7b407d1}</UniqueIdentifier>
     </Filter>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="data.h" />
     <ClInclude Include="shader.h" />
+    <ClInclude Include="3rdparty\stb\stb_image.h">
+      <Filter>3rdparty\stb</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <None Include="shaders\shader.vs">
