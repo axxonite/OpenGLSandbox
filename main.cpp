@@ -14,6 +14,7 @@ unsigned int VAO;
 unsigned int EBO;
 unsigned int texture1;
 unsigned int texture2;
+unsigned int lightCubeVAO;
 
 const unsigned int SCR_WIDTH = 800;
 const unsigned int SCR_HEIGHT = 600;
@@ -26,6 +27,8 @@ bool firstMouse = true;
 // timing
 float deltaTime = 0.0f;	// time between current frame and last frame
 float lastFrame = 0.0f;
+
+glm::vec3 lightPos(1.2f, 1.0f, 2.0f);
 
 void windowResized(GLFWwindow* window, int width, int height)
 {
@@ -96,10 +99,16 @@ void createVertexArray() {
 	glBindBuffer(GL_ARRAY_BUFFER, VBO);
 	glBufferData(GL_ARRAY_BUFFER, sizeof(vertices), vertices, GL_STATIC_DRAW);
 
-	glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, 5 * sizeof(float), (void*)0);
+	glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, 6 * sizeof(float), (void*)0);
 	glEnableVertexAttribArray(0);
-	glVertexAttribPointer(1, 2, GL_FLOAT, GL_FALSE, 5 * sizeof(float), (void*)(3 * sizeof(float)));
+	glVertexAttribPointer(1, 3, GL_FLOAT, GL_FALSE, 6 * sizeof(float), (void*)0);
 	glEnableVertexAttribArray(1);
+
+	glGenVertexArrays(1, &lightCubeVAO);
+	glBindVertexArray(lightCubeVAO);
+	glBindBuffer(GL_ARRAY_BUFFER, VBO);
+	glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, 6 * sizeof(float), (void*)0);
+	glEnableVertexAttribArray(0);
 }
 
 
@@ -149,7 +158,8 @@ int main()
 		return -1;
 
 	createVertexArray();
-	Shader ourShader("../../shaders/shader.vs", "../../shaders/shader.fs");
+	Shader lightingShader("../../shaders/shader.vs", "../../shaders/shader.fs");
+	Shader lightCubeShader("../../shaders/shader.vs", "../../shaders/lightcube.fs");
 	texture1 = loadTexture("../../textures/container.jpg");
 	texture2 = loadTexture("../../textures/awesomeface.png");
 	createVertexArray();
@@ -165,20 +175,19 @@ int main()
 		glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
 		glEnable(GL_DEPTH_TEST);
 
-
 		float timeValue = (float)glfwGetTime();
 		float greenValue = sin(timeValue) / 2.0f + 0.5f;
-		ourShader.use();
-		ourShader.setFloat4("ourColor", 0.0f, greenValue, 0.0f, 1.0f);
-		ourShader.setInt("texture1", 0);
-		ourShader.setInt("texture2", 1);
+		lightingShader.use();
+		lightingShader.setFloat3("objectColor", 1.0f, 0.5f, 0.31f);
+		lightingShader.setFloat3("lightColor", 1.0f, 1.0f, 1.0f);
+		lightingShader.setFloat3("lightPos", lightPos);
+		lightingShader.setFloat3("viewPos", camera.GetPosition()); 
 
 		glm::mat4 projection = glm::perspective(glm::radians(camera.GetZoom()), (float)SCR_WIDTH / (float)SCR_HEIGHT, 0.1f, 100.0f);
-		ourShader.setMatrix44("projection", projection);
+		lightingShader.setMatrix44("projection", projection);
 
-		// camera/view transformation
 		glm::mat4 view = camera.GetViewMatrix();
-		ourShader.setMatrix44("view", view);
+		lightingShader.setMatrix44("view", view);
 
 		// glPolygonMode(GL_FRONT_AND_BACK, GL_LINE);
 
@@ -188,18 +197,24 @@ int main()
 		glBindTexture(GL_TEXTURE_2D, texture2);
 
 		glBindVertexArray(VAO);
-		for (unsigned int i = 0; i < 10; i++)
-		{
-			glm::mat4 model = glm::mat4(1.0f);
-			model = glm::translate(model, cubePositions[i]);
-			float angle = 20.0f * i;
-			model = glm::rotate(model, glm::radians(angle), glm::vec3(1.0f, 0.3f, 0.5f));
-			model = glm::rotate(model, (float)glfwGetTime() * glm::radians(500.0f), glm::vec3(0.5f, 1.0f, 0.0f));
-			ourShader.setMatrix44("model", model);
+		glm::mat4 model = glm::mat4(1.0f);
+		model = glm::translate(model, cubePositions[0]);
+		model = glm::rotate(model, (float)glfwGetTime() * glm::radians(100.0f), glm::vec3(0.5f, 1.0f, 0.0f));
+		lightingShader.setMatrix44("model", model);
 
-			glDrawArrays(GL_TRIANGLES, 0, 36);
-		}
+		glDrawArrays(GL_TRIANGLES, 0, 36);
 		glBindVertexArray(0);
+
+		// draw the light cube object
+		model = glm::mat4(1.0f);
+		model = glm::translate(model, lightPos);
+		model = glm::scale(model, glm::vec3(0.2f));
+		lightCubeShader.use();
+		lightCubeShader.setMatrix44("model", model);
+		lightCubeShader.setMatrix44("view", view);
+		lightCubeShader.setMatrix44("projection", projection);
+		glBindVertexArray(lightCubeVAO);
+		glDrawArrays(GL_TRIANGLES, 0, 36);
 
 		glfwSwapBuffers(window);
 		glfwPollEvents();

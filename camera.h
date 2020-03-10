@@ -38,10 +38,8 @@ public:
 	// Returns the view matrix calculated using Euler Angles and the LookAt Matrix
 	glm::mat4 GetViewMatrix();
 
-	float GetZoom()
-	{
-		return Zoom;
-	}
+	float GetZoom() const { return Zoom; }
+	glm::vec3 GetPosition() const { return Position; }
 
 private:
 
