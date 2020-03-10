@@ -152,11 +152,13 @@
   <ItemGroup>
     <ClCompile Include="3rdparty\glad\src\glad.c" />
     <ClCompile Include="3rdparty\stb\stb_image.cpp" />
+    <ClCompile Include="camera.cpp" />
     <ClCompile Include="main.cpp" />
     <ClCompile Include="shader.cpp" />
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="3rdparty\stb\stb_image.h" />
+    <ClInclude Include="camera.h" />
     <ClInclude Include="data.h" />
     <ClInclude Include="shader.h" />
   </ItemGroup>

@@ -9,6 +9,7 @@
     <ClCompile Include="3rdparty\stb\stb_image.cpp">
       <Filter>3rdparty\stb</Filter>
     </ClCompile>
+    <ClCompile Include="camera.cpp" />
   </ItemGroup>
   <ItemGroup>
     <Filter Include="shaders">
@@ -30,6 +31,7 @@
     <ClInclude Include="3rdparty\stb\stb_image.h">
       <Filter>3rdparty\stb</Filter>
     </ClInclude>
+    <ClInclude Include="camera.h" />
   </ItemGroup>
   <ItemGroup>
     <None Include="shaders\shader.vs">
